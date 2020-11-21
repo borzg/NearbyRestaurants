@@ -1,0 +1,11 @@
+query SearchResponse($latitude:Float, $longitude:Float, $offset:Int, $sort_by:String) {
+  search(latitude: $latitude, longitude: $longitude, offset: $offset, sort_by:$sort_by) {
+      total
+      business {
+        name
+        distance
+        review_count
+        photos
+      }
+    }
+}
