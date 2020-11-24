@@ -4,11 +4,13 @@ import SearchResponseQuery
 import androidx.paging.PagingSource
 import com.apollographql.apollo.api.Input
 import com.apollographql.apollo.coroutines.await
+import com.borzg.nearbyrestaurants.database.AppDatabase
+import com.borzg.nearbyrestaurants.database.BusinessDao
 import com.borzg.nearbyrestaurants.utils.ApolloService
 
 const val PAGE_SIZE = 20
 
-class SearchSource(private val coordinates: Coordinates): PagingSource<Int, SearchResponseQuery.Business>() {
+class SearchSource(private val coordinates: Coordinates, val businessDao: BusinessDao): PagingSource<Int, SearchResponseQuery.Business>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, SearchResponseQuery.Business> {
         val offset = params.key ?: START_POSITION
@@ -22,6 +24,7 @@ class SearchSource(private val coordinates: Coordinates): PagingSource<Int, Sear
                     sort_by = Input.optional(SORT_BY_REVIEW_COUNT)
                 )).await()
             val result = response.data?.search?.business?.filterNotNull() ?: emptyList()
+            businessDao.insertAllSearchResults(result)
             LoadResult.Page(
                 data = result,
                 prevKey = if (offset == START_POSITION) null else offset - PAGE_SIZE,

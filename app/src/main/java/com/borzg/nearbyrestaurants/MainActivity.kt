@@ -1,11 +1,15 @@
 package com.borzg.nearbyrestaurants
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -19,6 +23,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.borzg.nearbyrestaurants.database.AppDatabase
 import com.borzg.nearbyrestaurants.databinding.ActivityMainBinding
 import com.google.android.gms.location.*
 import kotlinx.coroutines.flow.collectLatest
@@ -35,8 +40,15 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
 
+    val onItemClickListener: (SearchResponseQuery.Business) -> Unit = {
+        val intent = Intent(this, DetailBusinessActivity::class.java)
+        intent.putExtra(DetailBusinessActivity.BUSINESS_ID_KEY, it.id)
+        intent.putExtra(DetailBusinessActivity.BUSINESS_DISTANCE_KEY, it.distance)
+        startActivity(intent)
+    }
+
     private val businessAdapter: BusinessAdapter by lazy {
-        BusinessAdapter()
+        BusinessAdapter(onItemClickListener)
     }
 
     private var fusedLocationClient: FusedLocationProviderClient? = null
@@ -51,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
         initializeLocationUpdates()
 
+        viewModel.businessDao = AppDatabase.getInstance(this).businessDao()
         // Starts a new search when location data updates
         viewModel.coordinateLiveData.distinctUntilChanged().observe(this) { startSearch() }
     }
@@ -136,10 +149,15 @@ class MainActivity : AppCompatActivity() {
             return
         }
         lifecycleScope.launch {
-            viewModel.searchNearbyBusinesses().collectLatest { pagingData ->
+            viewModel.searchNearbyBusinesses(isConnected()).collectLatest { pagingData ->
                 businessAdapter.submitData(pagingData)
             }
         }
+    }
+
+    private fun isConnected(): Boolean {
+        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return manager.getActiveNetworkInfo() != null && manager.getActiveNetworkInfo()!!.isConnected()
     }
 
     private fun handleLoadStates(loadStates: CombinedLoadStates) {

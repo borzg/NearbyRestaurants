@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">NearbyRestaurants</string>
     <string name="nothing_found">Nothing found</string>
+
+    <string name="is_open">Now is %1$s</string>
 </resources>

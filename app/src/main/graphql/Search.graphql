@@ -1,7 +1,8 @@
 query SearchResponse($latitude:Float, $longitude:Float, $offset:Int, $sort_by:String) {
   search(latitude: $latitude, longitude: $longitude, offset: $offset, sort_by:$sort_by) {
-      total
+        total
       business {
+        id
         name
         distance
         review_count

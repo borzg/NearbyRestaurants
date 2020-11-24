@@ -1,0 +1,12 @@
+query BusinessDetails($id:String) {
+  business(id: $id) {
+        id
+        name
+        distance
+        review_count
+        photos
+        phone
+        is_closed
+        rating
+    }
+}

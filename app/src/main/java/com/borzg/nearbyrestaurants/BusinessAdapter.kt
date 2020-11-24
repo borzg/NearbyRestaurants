@@ -11,7 +11,7 @@ import com.borzg.nearbyrestaurants.utils.GlideApp
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import java.lang.StringBuilder
 
-class BusinessAdapter :
+class BusinessAdapter(val onItemClickListener: (Business) -> Unit) :
     PagingDataAdapter<Business, BusinessAdapter.BusinessViewHolder>(BusinessItemDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {
@@ -20,13 +20,13 @@ class BusinessAdapter :
     }
 
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
-        getItem(position)?.let { holder.bind(it) }
+        getItem(position)?.let { holder.bind(it, onItemClickListener) }
     }
 
     inner class BusinessViewHolder(private val binding: LiBusinessBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(business: Business) {
+        fun bind(business: Business, onItemClickListener: (Business) -> Unit) {
             with(binding) {
                 name.text = business.name ?: "No name"
                 distance.text = business.distance?.toMeters() ?: "Unknown"
@@ -36,12 +36,11 @@ class BusinessAdapter :
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(photo)
                 }
+                root.setOnClickListener {
+                    onItemClickListener.invoke(business)
+                }
             }
         }
-    }
-
-    fun Double.toMeters(): String {
-        return "${toInt()}m"
     }
 
     /**
